@@ -1,0 +1,27 @@
+// For use with the Templater Plugin //
+// Place the Script in Templates Folder //
+// Open Note with Numbered List and Press (Ctrl + P) //
+// Select 'Templater: Open insert template modal' //
+// Select the name of this 'Template' Script //
+// Edit the tags to appear in the frontmatter prior to execution or manually in the resulting note //
+
+<%*
+(async () => {
+  const TAGS = ["media", "audiobooks"];
+  // The filter property will drop the returned values that are null from "items" //
+  const items = tp.file.content.split('\n')
+    .filter(l => /^\d+\.\s+/.test(l))
+    .map(l => {
+      const m = l.replace(/^\d+\.\s+/, '').match(/^(.+?)(?:\s+-\s+([^(]+?))?(?:\s+\((\d{4})\))?\s*$/);
+      return m ? { title: m[1].trim(), author: m[2]?.trim() ?? null, year: m[3]?.trim() ?? null } : null;
+    })
+    .filter(Boolean);
+  if (!items.length) { new Notice("No numbered list items found."); return; }
+  // Renders a table from extracted items into a defined structure for columns //
+  const row = (...c) => `| ${c.map(x => x ?? "").join(" | ")} |`;
+  // Renders tags into the frontmatter of the base note //
+  const tagLine = TAGS.length ? `---\ntags:\n${TAGS.map(t => `  - ${t}`).join('\n')}\n---\n\n` : "";
+  // Renders inline rather than a separate function //
+  tR += `${tagLine}# ${tp.file.title}\n\n${[row("Title","Author","Year"), row("---","---","---"), ...items.map(({title,author,year}) => row(title,author,year))].join('\n')}`;
+})();
+%>
